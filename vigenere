@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+
+set -euo pipefail
+
+text="${1:-}"
+key="${2:-}"
+
+if [[ -z "$text" || -z "$key" ]]; then
+  echo "Usage: $0 \"plaintext\" \"key\"" >&2
+  exit 1
+fi
+
+
+pt=$(printf '%s' "$text" | tr 'A-Z' 'a-z' | tr -cd 'a-z')
+ky=$(printf '%s' "$key"  | tr 'A-Z' 'a-z' | tr -cd 'a-z')
+
+if [[ -z "$ky" ]]; then
+  echo "Error: key must contain letters a–z." >&2
+  exit 1
+fi
+
+awk -v text="$pt" -v key="$ky" '
+BEGIN {
+  alphabet="abcdefghijklmnopqrstuvwxyz"
+  n=length(alphabet)
+
+ 
+  for(i=1;i<=n;i++){ c=substr(alphabet,i,1); idx[c]=i-1; rev[i-1]=c }
+
+  klen=length(key); out=""; ki=1
+  for(i=1;i<=length(text);i++){
+    p=substr(text,i,1)
+    k=substr(key,ki,1)
+    out = out rev[(idx[p] + idx[k]) % n]
+    ki++; if(ki>klen) ki=1
+  }
+  print out
+}
